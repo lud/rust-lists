@@ -167,6 +167,7 @@ mod test {
         list.peek_mut().map(|v| *v = *v + 1);
 
         assert_eq!(list.peek(), Some(&4));
+        assert_eq!(list.pop(), Some(4));
     }
 
     #[test]
