@@ -102,6 +102,34 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
+pub struct IterMut<'a, T> {
+    // lifetime: generic, both struct and inner value share the same lifetime,
+    // each one lives as long as the other lives.
+    next: Option<&'a mut Node<T>>,
+}
+
+impl<T> List<T> {
+    // lifetime: self (list) must live as long as we hold the Iter struct.
+    // (lifetime removed now as it is infered)
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            next: self.head.as_deref_mut(),
+        }
+    }
+}
+
+// lifetime: the Iterator and Iter must share the same lifetime
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.take().map(|node| {
+            self.next = node.next.as_deref_mut();
+            &mut node.elem
+        })
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
@@ -174,5 +202,26 @@ mod test {
         assert_eq!(iter.next(), Some(&1));
 
         assert_eq!(list.peek(), Some(&3));
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.iter_mut();
+        assert_eq!(iter.next(), Some(&mut 3));
+        assert_eq!(iter.next(), Some(&mut 2));
+        assert_eq!(iter.next(), Some(&mut 1));
+
+        for x in list.iter_mut() {
+            *x = *x + 1000;
+        }
+
+        assert_eq!(Some(1003), list.pop());
+        assert_eq!(Some(1002), list.pop());
+        assert_eq!(Some(1001), list.pop());
     }
 }
