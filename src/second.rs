@@ -36,6 +36,26 @@ impl<T> List<T> {
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         self.head.as_mut().map(|node| &mut node.elem)
     }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+
+    // lifetime: self (list) must live as long as we hold the Iter struct.
+    // (lifetime removed now as it is infered)
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head.as_deref(),
+        }
+    }
+
+    // lifetime: self (list) must live as long as we hold the Iter struct.
+    // (lifetime removed now as it is infered)
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            next: self.head.as_deref_mut(),
+        }
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -49,12 +69,6 @@ impl<T> Drop for List<T> {
 
 pub struct IntoIter<T>(List<T>);
 
-impl<T> List<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-}
-
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
 
@@ -67,16 +81,6 @@ pub struct Iter<'a, T> {
     // lifetime: generic, both struct and inner value share the same lifetime,
     // each one lives as long as the other lives.
     next: Option<&'a Node<T>>,
-}
-
-impl<T> List<T> {
-    // lifetime: self (list) must live as long as we hold the Iter struct.
-    // (lifetime removed now as it is infered)
-    pub fn iter(&self) -> Iter<T> {
-        Iter {
-            next: self.head.as_deref(),
-        }
-    }
 }
 
 // lifetime: the Iterator and Iter must share the same lifetime
@@ -106,16 +110,6 @@ pub struct IterMut<'a, T> {
     // lifetime: generic, both struct and inner value share the same lifetime,
     // each one lives as long as the other lives.
     next: Option<&'a mut Node<T>>,
-}
-
-impl<T> List<T> {
-    // lifetime: self (list) must live as long as we hold the Iter struct.
-    // (lifetime removed now as it is infered)
-    pub fn iter_mut(&mut self) -> IterMut<T> {
-        IterMut {
-            next: self.head.as_deref_mut(),
-        }
-    }
 }
 
 // lifetime: the Iterator and Iter must share the same lifetime
